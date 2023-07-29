@@ -1,5 +1,5 @@
 project:
-  name: quickstart-clickhouse-cluster
+  name: cfn-ps-clickhouse-cluster
   regions:
   - us-east-1
   parameters:
