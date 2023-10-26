@@ -4,7 +4,7 @@
 # ${ClickHouseVersion}   1
 # ${DBPassword}   2
 # ${RootStackName}   3
-# ${AWS::Region}   4 
+# ${AWS::Region}   4
 # ${DemoDataSize}   5
 # ${ClickHouseNodeCount} 6
 # ${GrafanaVersion} 7
@@ -24,9 +24,10 @@ sleep 1
 
 
 yum install yum-utils
-rpm --import https://repo.clickhouse.tech/CLICKHOUSE-KEY.GPG
-yum-config-manager --add-repo https://repo.clickhouse.tech/rpm/stable/x86_64
-yum install clickhouse-client-$1 -y
+
+sudo yum-config-manager --add-repo https://packages.clickhouse.com/rpm/clickhouse.repo
+sudo yum install clickhouse-client-$1 -y
+
 sleep 1
 if [ ! -d "/etc/clickhouse-client" ]; then
     echo "Try to download from https://mirrors.tuna.tsinghua.edu.cn/clickhouse/"
@@ -168,7 +169,7 @@ then
     done
 fi
 
-# install grafana 
+# install grafana
 mkdir -p /home/ec2-user/tools/install/
 cd /home/ec2-user/tools/install/
 mkdir /home/ec2-user/tools/install/grafana
@@ -218,8 +219,8 @@ mv /home/ec2-user/downloaddata.sh .
 sed -i "s|ontimefrom|$ontimefrom|" /home/ec2-user/tools/install/demodata/downloaddata.sh
 sed -i "s|ontimeto|$ontimeto|" /home/ec2-user/tools/install/demodata/downloaddata.sh
 
-chmod +x /home/ec2-user/tools/install/demodata/downloaddata.sh 
-./downloaddata.sh 
+chmod +x /home/ec2-user/tools/install/demodata/downloaddata.sh
+./downloaddata.sh
 sleep 1
 # Retry to download the missing file
 ./downloaddata.sh
