@@ -718,7 +718,10 @@ Resources:
         Iops: !Ref ZookeeperIops
         CloudWatchAgentURL: !If [IsChinaRegion, 'https://s3.cn-north-1.amazonaws.com.cn/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm', 'https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm']
         InstanceRoleArn: !If [IsChinaRegion, 'aws-cn', 'aws']
-        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketName: !If
+          - UsingDefaultBucket
+          - !Sub '${QSS3BucketName}-${AWS::Region}'
+          - !Ref QSS3BucketName        
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
   ClickHouseBucket:
     Type: AWS::S3::Bucket
@@ -793,7 +796,10 @@ Resources:
         ZookeeperPrivateIp3: !GetAtt ZookeeperClusterStack.Outputs.ZookeeperPrivateIp3
         CloudWatchAgentURL: !If [IsChinaRegion, 'https://s3.cn-north-1.amazonaws.com.cn/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm', 'https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm']
         InstanceRoleArn: !If [IsChinaRegion, 'aws-cn', 'aws']
-        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketName: !If
+          - UsingDefaultBucket
+          - !Sub '${QSS3BucketName}-${AWS::Region}'
+          - !Ref QSS3BucketName        
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
         SecretId: !Ref ClickHouseSecret
   ClickHouseClusterArmStack: 
@@ -851,7 +857,10 @@ Resources:
         ZookeeperPrivateIp3: !GetAtt ZookeeperClusterStack.Outputs.ZookeeperPrivateIp3
         CloudWatchAgentURL: !If [IsChinaRegion, 'https://s3.cn-north-1.amazonaws.com.cn/amazoncloudwatch-agent/ubuntu/arm64/latest/amazon-cloudwatch-agent.deb', 'https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/arm64/latest/amazon-cloudwatch-agent.deb']
         InstanceRoleArn: !If [IsChinaRegion, 'aws-cn', 'aws']
-        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketName: !If
+          - UsingDefaultBucket
+          - !Sub '${QSS3BucketName}-${AWS::Region}'
+          - !Ref QSS3BucketName        
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
   Nlb2NodesStack:
     Condition: 2NodesCondition
