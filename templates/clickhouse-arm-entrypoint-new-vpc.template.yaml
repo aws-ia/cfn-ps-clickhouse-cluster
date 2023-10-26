@@ -47,6 +47,7 @@ Metadata:
       - ClickHouseVolumeType
       - ClickHouseVolumeSize
       - ClickHouseIops
+      - ClickHousePkgS3URI
       - Architecture
       - DistributedProductMode
       - LoadBalancing
@@ -57,7 +58,6 @@ Metadata:
       - MaxThreads
       - Port
       - DemoDataSize
-      - SourceCodeStorage
       - LatestAmiId
     - Label:
         default: ClickHouse operation configuration
@@ -127,6 +127,8 @@ Metadata:
         default: Volume size of ClickHouse nodes
       ClickHouseIops:
         default: IOPS of ClickHouse nodes
+      ClickHousePkgS3URI:
+        default: ClickHouse ARM64 tgz package storage, e.g., s3://{YOUR_BUCKET}
       Architecture:
         default: Supported CPU architectures
       DistributedProductMode:
@@ -159,8 +161,6 @@ Metadata:
         default: Alarm email address
       LatestAmiId:
         default: Latest Amazon Linux2 AMI ID
-      SourceCodeStorage:
-        default: The ClickHouse source code storage
 Parameters:
   AvailabilityZones:
     Description: 'List of Availability Zones to use for the subnets in the VPC. Note:
@@ -244,8 +244,8 @@ Parameters:
     Default: t2.micro
     Description: Amazon EC2 instance type for the bastion instances.
     Type: String
-  NumBastionHosts: 
-    AllowedValues: 
+  NumBastionHosts:
+    AllowedValues:
       - 1
       - 2
       - 3
@@ -253,11 +253,11 @@ Parameters:
     Default: 1
     Description: Enter the number of bastion hosts to create.
     Type: String
-  ZookeeperInstanceType: 
+  ZookeeperInstanceType:
     Description: Amazon EC2 instance type for the Zookeeper nodes.
     Type: String
     Default: m5.large
-    AllowedValues: 
+    AllowedValues:
       - t2.micro
       - t2.small
       - t2.medium
@@ -289,27 +289,26 @@ Parameters:
       - i3.16xlarge
   ZookeeperVersion:
     AllowedValues:
-    - '3.5.10'
-    - '3.6.3'
     - '3.7.1'
-    Default: '3.5.10'
-    Description: Zookeeper version (3.5.10).
+    - '3.8.2'
+    Default: '3.8.2'
+    Description: Zookeeper version (3.8.2).
     Type: String
   ZookeeperNodeCount:
     Default: 3
     Type: Number
     Description: Number of Zookeeper nodes.
-    AllowedValues: 
+    AllowedValues:
       - 3
   ZookeeperDeviceName:
     Description: The device name (for example, /dev/sdh or xvdh).
     Type: String
     Default: /dev/xvdh
-  ZookeeperVolumeSize: 
+  ZookeeperVolumeSize:
     Type: String
     Description: EBS volume size (data) to be attached to node in GBs.
     Default: 500
-  ZookeeperVolumeType: 
+  ZookeeperVolumeType:
     Type: String
     Description: EBS volume type (data) to be attached to node in GBs [gp2,gp3,st1], one volume for data storage is mounted automatically by CloudFormation stack.
     Default: gp2
@@ -318,7 +317,7 @@ Parameters:
       - gp3
       - st1
       - io1
-  ZookeeperIops: 
+  ZookeeperIops:
     Type: String
     Description: IOPS of EBS volume when io1 type is chosen. Otherwise ignored.
     Default: 1000
@@ -329,11 +328,11 @@ Parameters:
     AllowedValues:
       - 1az
       - 2az
-  ClickHouseInstanceType: 
+  ClickHouseInstanceType:
     Description: Amazon EC2 instance type for the ClickHouse nodes.
     Type: String
     Default: r6g.8xlarge
-    AllowedValues: 
+    AllowedValues:
       - r6g.xlarge
       - r6g.2xlarge
       - r6g.4xlarge
@@ -342,10 +341,14 @@ Parameters:
       - r6g.16xlarge
   ClickHouseVersion:
     AllowedValues:
-      - '21.8.7.22'
-    Default: '21.8.7.22'
+      - '23.3.8.21'
+    Default: '23.3.8.21'
     Description: ClickHouse version.
     Type: String
+  ClickHousePkgS3URI:
+    Description: ClickHouse ARM64 tgz package storage, e.g., s3://{YOUR_BUCKET}
+    Type: String
+    Default: none
   ClickHouseTimezone:
     Default: 'Asia/Shanghai' #America/Los_Angeles
     Description: 'ClickHouse time zone.'
@@ -354,7 +357,7 @@ Parameters:
     Type: String
     Default: 2
     Description: Number of ClickHouse nodes.
-    AllowedValues: 
+    AllowedValues:
       - 2
       - 4
       - 6
@@ -363,17 +366,17 @@ Parameters:
     Description:  Amazon graviton2-based EC2 instances provide up to 40 percent better price/performance over comparable current generation x86-based instances.
     Type: String
     Default: ARM
-    AllowedValues: 
+    AllowedValues:
       - ARM
   ClickHouseDeviceName:
     Description: The device name (for example, /dev/sdh or xvdh).
     Type: String
     Default: /dev/nvme1n1
-  ClickHouseVolumeSize: 
+  ClickHouseVolumeSize:
     Type: String
     Description: EBS volume size (data) to be attached to node in GBs.
     Default: 500
-  ClickHouseVolumeType: 
+  ClickHouseVolumeType:
     Type: String
     Description: EBS volume type (data) to be attached to node in GBs [gp2,gp3,st1], one volume for data storage is mounted automatically by CloudFormation stack.
     Default: gp2
@@ -382,7 +385,7 @@ Parameters:
       - gp3
       - st1
       - io1
-  ClickHouseIops: 
+  ClickHouseIops:
     Type: String
     Description: IOPS of EBS volume when io1 type is chosen. Otherwise ignored.
     Default: 1000
@@ -500,44 +503,40 @@ Parameters:
     Description: Reference the latest Amazon Linux2 AMI in a CloudFormation template.
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
-  AlarmEmail: 
+  AlarmEmail:
     #AllowedPattern: ^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$
     AllowedPattern: \w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*
     ConstraintDescription: Incorrect email address.
     Description: "Email address to notify of operational issues."
     Type: "String"
-  SourceCodeStorage:
-    Type: String
-    Default: github
-    Description: The ClickHouse source code storage. Support github or s3://bucketname/ClickHouse.zip.
 Conditions:
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-ia']
   UsingSingleAZ: !Equals [!Ref SingleAvailableZone, '1az']
   IsX86: !Equals [!Ref Architecture, 'X86']
   IsArm: !Equals [!Ref Architecture, 'ARM']
-  IsChinaRegion: !Or 
-      - !Equals 
+  IsChinaRegion: !Or
+      - !Equals
         - !Ref 'AWS::Region'
         - cn-north-1
-      - !Equals 
+      - !Equals
         - !Ref 'AWS::Region'
         - cn-northwest-1
   2NodesCondition: !Equals [!Ref 'ClickHouseNodeCount', '2']
-  4NodesCondition: !Equals [!Ref 'ClickHouseNodeCount', '4'] 
-  6NodesCondition: !Equals [!Ref 'ClickHouseNodeCount', '6'] 
+  4NodesCondition: !Equals [!Ref 'ClickHouseNodeCount', '4']
+  6NodesCondition: !Equals [!Ref 'ClickHouseNodeCount', '6']
   8NodesCondition: !Equals [!Ref 'ClickHouseNodeCount', '8']
 Resources:
   VPCStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: 
+      TemplateURL:
         Fn::Sub:
             - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/cfn-ps-aws-vpc/templates/aws-vpc.template.yaml
-            - S3Region: !If 
+            - S3Region: !If
                 - UsingDefaultBucket
                 - !Ref 'AWS::Region'
                 - !Ref QSS3BucketRegion
-              S3Bucket: !If 
+              S3Bucket: !If
                 - UsingDefaultBucket
                 - !Sub '${QSS3BucketName}-${AWS::Region}'
                 - !Ref QSS3BucketName
@@ -604,14 +603,14 @@ Resources:
   SecurityGroupStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: 
+      TemplateURL:
         Fn::Sub:
           - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/securitygroups.template.yaml
-          - S3Region: !If 
+          - S3Region: !If
               - UsingDefaultBucket
               - !Ref 'AWS::Region'
               - !Ref QSS3BucketRegion
-            S3Bucket: !If 
+            S3Bucket: !If
               - UsingDefaultBucket
               - !Sub '${QSS3BucketName}-${AWS::Region}'
               - !Ref QSS3BucketName
@@ -635,28 +634,28 @@ Resources:
         -
           Key: AppName
           Value: !Join ['-',['ClickHouseSecret',!GetAtt BastionStack.Outputs.BastionSecurityGroupID]]
-  ZookeeperClusterStack: 
+  ZookeeperClusterStack:
     Type: AWS::CloudFormation::Stack
-    Properties: 
+    Properties:
       TemplateURL:
-        Fn::Sub: 
+        Fn::Sub:
           - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/zookeeper.template.yaml
-          - S3Region: !If 
+          - S3Region: !If
               - UsingDefaultBucket
               - !Ref 'AWS::Region'
               - !Ref QSS3BucketRegion
-            S3Bucket: !If 
+            S3Bucket: !If
               - UsingDefaultBucket
               - !Sub '${QSS3BucketName}-${AWS::Region}'
               - !Ref QSS3BucketName
-      Parameters: 
+      Parameters:
         RootStackName: !GetAtt BastionStack.Outputs.BastionSecurityGroupID
         PrivateSubnetID1:
-          Fn::GetAtt: 
+          Fn::GetAtt:
             - VPCStack
             - Outputs.PrivateSubnet1AID
         PrivateSubnetID2:
-          Fn::GetAtt: 
+          Fn::GetAtt:
             - VPCStack
             - Outputs.PrivateSubnet2AID
         KeyPairName: !Ref KeyPairName
@@ -673,16 +672,19 @@ Resources:
         Iops: !Ref ZookeeperIops
         CloudWatchAgentURL: !If [IsChinaRegion, 'https://s3.cn-north-1.amazonaws.com.cn/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm', 'https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm']
         InstanceRoleArn: !If [IsChinaRegion, 'aws-cn', 'aws']
-        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketName: !If
+          - UsingDefaultBucket
+          - !Sub '${QSS3BucketName}-${AWS::Region}'
+          - !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
   ClickHouseBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      BucketName: 
-        !Join 
-          - '-' 
+      BucketName:
+        !Join
+          - '-'
           - ['clickhouse-data',!GetAtt VPCStack.Outputs.VPCID]
       VersioningConfiguration:
         Status: Enabled
@@ -692,33 +694,33 @@ Resources:
           Tierings:
             - AccessTier: ARCHIVE_ACCESS
               Days: 180
-  ClickHouseClusterStack: 
+  ClickHouseClusterStack:
     Condition: IsX86
     Type: AWS::CloudFormation::Stack
-    Properties: 
+    Properties:
       TemplateURL:
-        Fn::Sub: 
+        Fn::Sub:
           - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/clickhouse.template.yaml
-          - S3Region: !If 
+          - S3Region: !If
               - UsingDefaultBucket
               - !Ref 'AWS::Region'
               - !Ref QSS3BucketRegion
-            S3Bucket: !If 
+            S3Bucket: !If
               - UsingDefaultBucket
               - !Sub '${QSS3BucketName}-${AWS::Region}'
               - !Ref QSS3BucketName
-      Parameters: 
+      Parameters:
         RootStackName: !GetAtt BastionStack.Outputs.BastionSecurityGroupID
         PrivateSubnetID1:
-          Fn::GetAtt: 
+          Fn::GetAtt:
             - VPCStack
             - Outputs.PrivateSubnet1AID
         PrivateSubnetID2: !If
-          - UsingSingleAZ 
-          - Fn::GetAtt: 
+          - UsingSingleAZ
+          - Fn::GetAtt:
             - VPCStack
             - Outputs.PrivateSubnet1AID
-          - Fn::GetAtt: 
+          - Fn::GetAtt:
             - VPCStack
             - Outputs.PrivateSubnet2AID
         ClickHouseServerSecurityGroup: !GetAtt SecurityGroupStack.Outputs.ClickHouseServerSecurityGroup
@@ -747,36 +749,39 @@ Resources:
         ZookeeperPrivateIp3: !GetAtt ZookeeperClusterStack.Outputs.ZookeeperPrivateIp3
         CloudWatchAgentURL: !If [IsChinaRegion, 'https://s3.cn-north-1.amazonaws.com.cn/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm', 'https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm']
         InstanceRoleArn: !If [IsChinaRegion, 'aws-cn', 'aws']
-        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketName: !If
+          - UsingDefaultBucket
+          - !Sub '${QSS3BucketName}-${AWS::Region}'
+          - !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
         SecretId: !Ref ClickHouseSecret
-  ClickHouseClusterArmStack: 
+  ClickHouseClusterArmStack:
     Condition: IsArm
     Type: AWS::CloudFormation::Stack
-    Properties: 
+    Properties:
       TemplateURL:
-        Fn::Sub: 
+        Fn::Sub:
           - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/clickhouse.arm.template.yaml
-          - S3Region: !If 
+          - S3Region: !If
               - UsingDefaultBucket
               - !Ref 'AWS::Region'
               - !Ref QSS3BucketRegion
-            S3Bucket: !If 
+            S3Bucket: !If
               - UsingDefaultBucket
               - !Sub '${QSS3BucketName}-${AWS::Region}'
               - !Ref QSS3BucketName
-      Parameters: 
+      Parameters:
         RootStackName: !GetAtt BastionStack.Outputs.BastionSecurityGroupID
         PrivateSubnetID1:
-          Fn::GetAtt: 
+          Fn::GetAtt:
             - VPCStack
             - Outputs.PrivateSubnet1AID
         PrivateSubnetID2: !If
-          - UsingSingleAZ 
-          - Fn::GetAtt: 
+          - UsingSingleAZ
+          - Fn::GetAtt:
             - VPCStack
             - Outputs.PrivateSubnet1AID
-          - Fn::GetAtt: 
+          - Fn::GetAtt:
             - VPCStack
             - Outputs.PrivateSubnet2AID
         ClickHouseServerSecurityGroup: !GetAtt SecurityGroupStack.Outputs.ClickHouseServerSecurityGroup
@@ -787,6 +792,7 @@ Resources:
         ClickHouseTimezone: !Ref ClickHouseTimezone
         ClickHouseNodeCount: !Ref ClickHouseNodeCount
         ClickHouseBucketName: !Ref ClickHouseBucket
+        ClickHousePkgS3URI: !Ref ClickHousePkgS3URI
         DeviceName: !Ref ClickHouseDeviceName
         VolumeType: !Ref ClickHouseVolumeType
         VolumeSize: !Ref ClickHouseVolumeSize
@@ -805,166 +811,168 @@ Resources:
         ZookeeperPrivateIp3: !GetAtt ZookeeperClusterStack.Outputs.ZookeeperPrivateIp3
         CloudWatchAgentURL: !If [IsChinaRegion, 'https://s3.cn-north-1.amazonaws.com.cn/amazoncloudwatch-agent/ubuntu/arm64/latest/amazon-cloudwatch-agent.deb', 'https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/arm64/latest/amazon-cloudwatch-agent.deb']
         InstanceRoleArn: !If [IsChinaRegion, 'aws-cn', 'aws']
-        QSS3BucketName: !Ref QSS3BucketName
+        QSS3BucketName: !If
+          - UsingDefaultBucket
+          - !Sub '${QSS3BucketName}-${AWS::Region}'
+          - !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
         SecretId: !Ref ClickHouseSecret
-        SourceCodeStorage: !Ref SourceCodeStorage
   Nlb2NodesStack:
     Condition: 2NodesCondition
     Type: AWS::CloudFormation::Stack
-    Properties: 
+    Properties:
       TemplateURL:
-        Fn::Sub: 
+        Fn::Sub:
           - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/nlb.template.yaml
-          - S3Region: !If 
+          - S3Region: !If
               - UsingDefaultBucket
               - !Ref 'AWS::Region'
               - !Ref QSS3BucketRegion
-            S3Bucket: !If 
+            S3Bucket: !If
               - UsingDefaultBucket
               - !Sub '${QSS3BucketName}-${AWS::Region}'
               - !Ref QSS3BucketName
-      Parameters: 
+      Parameters:
         VPCID: !GetAtt VPCStack.Outputs.VPCID
         Subnets: !Join
           - ','
           - [ !GetAtt VPCStack.Outputs.PrivateSubnet1AID ]
         NodeCount: !Ref ClickHouseNodeCount
         Port: !Ref Port
-        EC2Instance1: !If 
-          - IsX86 
+        EC2Instance1: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID1
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID1
   Nlb4NodesStack:
     Condition: 4NodesCondition
     Type: AWS::CloudFormation::Stack
-    Properties: 
+    Properties:
       TemplateURL:
-        Fn::Sub: 
+        Fn::Sub:
           - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/nlb.template.yaml
-          - S3Region: !If 
+          - S3Region: !If
               - UsingDefaultBucket
               - !Ref 'AWS::Region'
               - !Ref QSS3BucketRegion
-            S3Bucket: !If 
+            S3Bucket: !If
               - UsingDefaultBucket
               - !Sub '${QSS3BucketName}-${AWS::Region}'
               - !Ref QSS3BucketName
-      Parameters: 
+      Parameters:
         VPCID: !GetAtt VPCStack.Outputs.VPCID
         Subnets: !Join
           - ','
           - [ !GetAtt VPCStack.Outputs.PrivateSubnet1AID ]
         NodeCount: !Ref ClickHouseNodeCount
         Port: !Ref Port
-        EC2Instance1: !If 
-          - IsX86 
+        EC2Instance1: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID1
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID1
-        EC2Instance2: !If 
-          - IsX86 
+        EC2Instance2: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID3
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID3
   Nlb6NodesStack:
     Condition: 6NodesCondition
     Type: AWS::CloudFormation::Stack
-    Properties: 
+    Properties:
       TemplateURL:
-        Fn::Sub: 
+        Fn::Sub:
           - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/nlb.template.yaml
-          - S3Region: !If 
+          - S3Region: !If
               - UsingDefaultBucket
               - !Ref 'AWS::Region'
               - !Ref QSS3BucketRegion
-            S3Bucket: !If 
+            S3Bucket: !If
               - UsingDefaultBucket
               - !Sub '${QSS3BucketName}-${AWS::Region}'
               - !Ref QSS3BucketName
-      Parameters: 
+      Parameters:
         VPCID: !GetAtt VPCStack.Outputs.VPCID
         Subnets: !Join
           - ','
           - [ !GetAtt VPCStack.Outputs.PrivateSubnet1AID ]
         NodeCount: !Ref ClickHouseNodeCount
         Port: !Ref Port
-        EC2Instance1: !If 
-          - IsX86 
+        EC2Instance1: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID1
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID1
-        EC2Instance2: !If 
-          - IsX86 
+        EC2Instance2: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID3
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID3
-        EC2Instance3: !If 
-          - IsX86 
+        EC2Instance3: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID5
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID5
   Nlb8NodesStack:
     Condition: 8NodesCondition
     Type: AWS::CloudFormation::Stack
-    Properties: 
+    Properties:
       TemplateURL:
-        Fn::Sub: 
+        Fn::Sub:
           - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/nlb.template.yaml
-          - S3Region: !If 
+          - S3Region: !If
               - UsingDefaultBucket
               - !Ref 'AWS::Region'
               - !Ref QSS3BucketRegion
-            S3Bucket: !If 
+            S3Bucket: !If
               - UsingDefaultBucket
               - !Sub '${QSS3BucketName}-${AWS::Region}'
               - !Ref QSS3BucketName
-      Parameters: 
+      Parameters:
         VPCID: !GetAtt VPCStack.Outputs.VPCID
         Subnets: !Join
           - ','
           - [ !GetAtt VPCStack.Outputs.PrivateSubnet1AID ]
         NodeCount: !Ref ClickHouseNodeCount
         Port: !Ref Port
-        EC2Instance1: !If 
-          - IsX86 
+        EC2Instance1: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID1
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID1
-        EC2Instance2: !If 
-          - IsX86 
+        EC2Instance2: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID3
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID3
-        EC2Instance3: !If 
-          - IsX86 
+        EC2Instance3: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID5
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID5
-        EC2Instance4: !If 
-          - IsX86 
+        EC2Instance4: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID7
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID7
   CloudWatchDashboard2Nodes:
     Condition: 2NodesCondition
     Type: AWS::CloudFormation::Stack
-    Properties: 
+    Properties:
       TemplateURL:
-        Fn::Sub: 
+        Fn::Sub:
           - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/cloudwatch-dashboard.template.yaml
-          - S3Region: !If 
+          - S3Region: !If
               - UsingDefaultBucket
               - !Ref 'AWS::Region'
               - !Ref QSS3BucketRegion
-            S3Bucket: !If 
+            S3Bucket: !If
               - UsingDefaultBucket
               - !Sub '${QSS3BucketName}-${AWS::Region}'
               - !Ref QSS3BucketName
-      Parameters: 
+      Parameters:
         DashboardName: !Sub 'ClickHouse-Cluster-Dashboard-${AWS::Region}'
         ClickHouseNodeCount: !Ref ClickHouseNodeCount
-        ClickHouseInstanceID1: !If 
-          - IsX86 
+        ClickHouseInstanceID1: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID1
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID1
-        ClickHouseInstanceID2: !If 
-          - IsX86 
+        ClickHouseInstanceID2: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID2
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID2
-        ClickHouseImageId: !If 
-          - IsX86 
+        ClickHouseImageId: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ImageId
           - !GetAtt ClickHouseClusterArmStack.Outputs.ImageId
         ClickHouseInstanceType: !Ref ClickHouseInstanceType
@@ -977,39 +985,39 @@ Resources:
   CloudWatchDashboard4Nodes:
     Condition: 4NodesCondition
     Type: AWS::CloudFormation::Stack
-    Properties: 
+    Properties:
       TemplateURL:
-        Fn::Sub: 
+        Fn::Sub:
           - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/cloudwatch-dashboard.template.yaml
-          - S3Region: !If 
+          - S3Region: !If
               - UsingDefaultBucket
               - !Ref 'AWS::Region'
               - !Ref QSS3BucketRegion
-            S3Bucket: !If 
+            S3Bucket: !If
               - UsingDefaultBucket
               - !Sub '${QSS3BucketName}-${AWS::Region}'
               - !Ref QSS3BucketName
-      Parameters: 
+      Parameters:
         DashboardName: !Sub 'ClickHouse-Cluster-Dashboard-${AWS::Region}'
         ClickHouseNodeCount: !Ref ClickHouseNodeCount
-        ClickHouseInstanceID1: !If 
-          - IsX86 
+        ClickHouseInstanceID1: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID1
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID1
-        ClickHouseInstanceID2: !If 
-          - IsX86 
+        ClickHouseInstanceID2: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID2
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID2
-        ClickHouseInstanceID3: !If 
-          - IsX86 
+        ClickHouseInstanceID3: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID3
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID3
-        ClickHouseInstanceID4: !If 
-          - IsX86 
+        ClickHouseInstanceID4: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID4
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID4
-        ClickHouseImageId: !If 
-          - IsX86 
+        ClickHouseImageId: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ImageId
           - !GetAtt ClickHouseClusterArmStack.Outputs.ImageId
         ClickHouseInstanceType: !Ref ClickHouseInstanceType
@@ -1022,47 +1030,47 @@ Resources:
   CloudWatchDashboard6Nodes:
     Condition: 6NodesCondition
     Type: AWS::CloudFormation::Stack
-    Properties: 
+    Properties:
       TemplateURL:
-        Fn::Sub: 
+        Fn::Sub:
           - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/cloudwatch-dashboard.template.yaml
-          - S3Region: !If 
+          - S3Region: !If
               - UsingDefaultBucket
               - !Ref 'AWS::Region'
               - !Ref QSS3BucketRegion
-            S3Bucket: !If 
+            S3Bucket: !If
               - UsingDefaultBucket
               - !Sub '${QSS3BucketName}-${AWS::Region}'
               - !Ref QSS3BucketName
-      Parameters: 
+      Parameters:
         DashboardName: !Sub 'ClickHouse-Cluster-Dashboard-${AWS::Region}'
         ClickHouseNodeCount: !Ref ClickHouseNodeCount
-        ClickHouseInstanceID1: !If 
-          - IsX86 
+        ClickHouseInstanceID1: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID1
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID1
-        ClickHouseInstanceID2: !If 
-          - IsX86 
+        ClickHouseInstanceID2: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID2
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID2
-        ClickHouseInstanceID3: !If 
-          - IsX86 
+        ClickHouseInstanceID3: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID3
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID3
-        ClickHouseInstanceID4: !If 
-          - IsX86 
+        ClickHouseInstanceID4: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID4
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID4
-        ClickHouseInstanceID5: !If 
-          - IsX86 
+        ClickHouseInstanceID5: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID5
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID5
-        ClickHouseInstanceID6: !If 
-          - IsX86 
+        ClickHouseInstanceID6: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID6
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID6
-        ClickHouseImageId: !If 
-          - IsX86 
+        ClickHouseImageId: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ImageId
           - !GetAtt ClickHouseClusterArmStack.Outputs.ImageId
         ClickHouseInstanceType: !Ref ClickHouseInstanceType
@@ -1075,55 +1083,55 @@ Resources:
   CloudWatchDashboard8Nodes:
     Condition: 8NodesCondition
     Type: AWS::CloudFormation::Stack
-    Properties: 
+    Properties:
       TemplateURL:
-        Fn::Sub: 
+        Fn::Sub:
           - https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/cloudwatch-dashboard.template.yaml
-          - S3Region: !If 
+          - S3Region: !If
               - UsingDefaultBucket
               - !Ref 'AWS::Region'
               - !Ref QSS3BucketRegion
-            S3Bucket: !If 
+            S3Bucket: !If
               - UsingDefaultBucket
               - !Sub '${QSS3BucketName}-${AWS::Region}'
               - !Ref QSS3BucketName
-      Parameters: 
+      Parameters:
         DashboardName: !Sub 'ClickHouse-Cluster-Dashboard-${AWS::Region}'
         ClickHouseNodeCount: !Ref ClickHouseNodeCount
-        ClickHouseInstanceID1: !If 
-          - IsX86 
+        ClickHouseInstanceID1: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID1
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID1
-        ClickHouseInstanceID2: !If 
-          - IsX86 
+        ClickHouseInstanceID2: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID2
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID2
-        ClickHouseInstanceID3: !If 
-          - IsX86 
+        ClickHouseInstanceID3: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID3
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID3
-        ClickHouseInstanceID4: !If 
-          - IsX86 
+        ClickHouseInstanceID4: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID4
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID4
-        ClickHouseInstanceID5: !If 
-          - IsX86 
+        ClickHouseInstanceID5: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID5
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID5
-        ClickHouseInstanceID6: !If 
-          - IsX86 
+        ClickHouseInstanceID6: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID6
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID6
-        ClickHouseInstanceID7: !If 
-          - IsX86 
+        ClickHouseInstanceID7: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID7
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID7
-        ClickHouseInstanceID8: !If 
-          - IsX86 
+        ClickHouseInstanceID8: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ClickHouseInstanceID8
           - !GetAtt ClickHouseClusterArmStack.Outputs.ClickHouseInstanceID8
-        ClickHouseImageId: !If 
-          - IsX86 
+        ClickHouseImageId: !If
+          - IsX86
           - !GetAtt ClickHouseClusterStack.Outputs.ImageId
           - !GetAtt ClickHouseClusterArmStack.Outputs.ImageId
         ClickHouseInstanceType: !Ref ClickHouseInstanceType
@@ -1167,6 +1175,6 @@ Outputs:
     Value: !If [IsChinaRegion, !Sub 'https://console.amazonaws.cn/cloudwatch/home?region=${AWS::Region}#dashboards:name=ClickHouse-Cluster-Dashboard-${AWS::Region}', !Sub 'https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=ClickHouse-Cluster-Dashboard-${AWS::Region}']
   DBPassword:
     Description: Dynamically generate a random text string stored in SecretsManager to use as a password
-    Value: !If [IsChinaRegion, 
-      !Join ['', [!Sub 'https://console.amazonaws.cn/secretsmanager/home?region=${AWS::Region}#!/secret?name=', !Ref ClickHouseSecret]], 
+    Value: !If [IsChinaRegion,
+      !Join ['', [!Sub 'https://console.amazonaws.cn/secretsmanager/home?region=${AWS::Region}#!/secret?name=', !Ref ClickHouseSecret]],
       !Join ['', [!Sub 'https://console.aws.amazon.com/secretsmanager/home?region=${AWS::Region}#!/secret?name=', !Ref ClickHouseSecret]]]
