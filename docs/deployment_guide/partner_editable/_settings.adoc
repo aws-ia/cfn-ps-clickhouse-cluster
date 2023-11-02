@@ -7,7 +7,7 @@
 :doc-year: 2023
 //:partner-contributors: John Smith, {partner-company-name}
 // :other-contributors: Akua Mansa, Trek10
-:aws-contributors: Wei Qiao, AWS Great China Region Solution team
+:aws-contributors: Wei Qiao, AWS Great China Region Solution team; Luna Lu, AWS Great China Region Solutions Architect
 :aws-ia-contributors: Troy Ameigh, AWS Integration & Automation team
 :deployment_time: 60 minutes
 :default_deployment_region: us-east-1
