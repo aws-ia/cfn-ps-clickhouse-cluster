@@ -858,6 +858,11 @@ p.footer-text a{color:#d7d8d8}
 <li><a href="#_costs_and_licenses">Costs and licenses</a></li>
 <li><a href="#_architecture">Architecture</a></li>
 <li><a href="#_deployment_options">Deployment options</a></li>
+<li><a href="#_predeployment_steps">Predeployment steps</a>
+<ul class="sectlevel2">
+<li><a href="#_aws_china_region_pre_deployment_steps">AWS China region pre-deployment steps</a></li>
+</ul>
+</li>
 <li><a href="#_deployment_steps">Deployment steps</a></li>
 <li><a href="#_postdeployment_steps">Postdeployment steps</a>
 <ul class="sectlevel2">
@@ -892,7 +897,7 @@ p.footer-text a{color:#d7d8d8}
 </div>
 <div class="paragraph text-center">
 <p><strong>July 2023</strong><br>
-<em>Wei Qiao, AWS Great China Region Solution team</em><br>
+<em>Wei Qiao, AWS Great China Region Solution team; Luna Lu, AWS Great China Region Solutions Architect</em><br>
 <em>Troy Ameigh, AWS Integration &amp; Automation team</em><br></p>
 </div>
 <div class="imageblock text-left image-container">
@@ -1037,6 +1042,80 @@ AWS Cloud.</p>
 </div>
 <div class="paragraph">
 <p>This Partner Solution provides separate templates for these options. It also lets you configure Classless Inter-Domain Routing (CIDR) blocks, instance types, and ClickHouse settings.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_predeployment_steps">Predeployment steps</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This solution can be deployed in both AWS global regions and AWS China regions.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>For deployment in global regions: You can leave the <code>ClickHousePkgS3URI</code> parameter in the template as the default value <strong>none</strong> and skip this section.</p>
+</li>
+<li>
+<p>For deployment in China regions: Please follow the steps below to upload pre-compiled ClickHouse tgz archives to your own S3 bucket and update the <code>ClickHousePkgS3URI</code> parameter.</p>
+</li>
+</ul>
+</div>
+<div class="sect2">
+<h3 id="_aws_china_region_pre_deployment_steps">AWS China region pre-deployment steps</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Download pre-complied tgz archives from <a href="https://packages.clickhouse.com/tgz/lts/" class="bare">https://packages.clickhouse.com/tgz/lts/</a> to your local.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>ClickHouse 23.3.8.21 on X86:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">wget https://packages.clickhouse.com/tgz/lts/clickhouse-server-23.3.8.21-amd64.tgz
+wget https://packages.clickhouse.com/tgz/lts/clickhouse-common-static-23.3.8.21-amd64.tgz
+wget https://packages.clickhouse.com/tgz/lts/clickhouse-client-23.3.8.21-amd64.tgz</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>ClickHouse 23.3.8.21 on ARM:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">wget https://packages.clickhouse.com/tgz/lts/clickhouse-server-23.3.8.21-arm64.tgz
+wget https://packages.clickhouse.com/tgz/lts/clickhouse-common-static-23.3.8.21-arm64.tgz
+wget https://packages.clickhouse.com/tgz/lts/clickhouse-client-23.3.8.21-arm64.tgz</code></pre>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Create a S3 bucket in your AWS China account and upload the tgz archives to the bucket.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Make sure the bucket is in the same region as the AWS account in which you are deploying this ClickHouse solution.</p>
+</li>
+<li>
+<p>Please upload the tgz archives directly to the bucket. Do not put them in a folder.</p>
+</li>
+<li>
+<p>The bucket containing ARM versions must only contain ARM versions.</p>
+</li>
+<li>
+<p>The bucket containing X86 versions must only contain X86 versions.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Note down your S3 bucket URI, e.g., <code>s3://{YOUR_BUCKET}</code>. Update the <code>ClickHousePkgS3URI</code> parameter with your bucket URI when configuring stack details.</p>
+</li>
+</ol>
+</div>
 </div>
 </div>
 </div>

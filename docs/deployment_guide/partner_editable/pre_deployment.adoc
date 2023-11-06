@@ -1,3 +1,38 @@
 //Include any predeployment steps here, such as signing up for a Marketplace AMI or making any changes to a partner account. If there are no predeployment steps, leave this file empty.
 
-//== Predeployment steps
+== Predeployment steps
+
+This solution can be deployed in both AWS global regions and AWS China regions.
+
+* For deployment in global regions: You can leave the `ClickHousePkgS3URI` parameter in the template as the default value *none* and skip this section.
+* For deployment in China regions: Please follow the steps below to upload pre-compiled ClickHouse tgz archives to your own S3 bucket and update the `ClickHousePkgS3URI` parameter.
+
+=== AWS China region pre-deployment steps
+
+. Download pre-complied tgz archives from https://packages.clickhouse.com/tgz/lts/ to your local.
+
+* ClickHouse 23.3.8.21 on X86:
++
+[source,bash]
+----
+wget https://packages.clickhouse.com/tgz/lts/clickhouse-server-23.3.8.21-amd64.tgz
+wget https://packages.clickhouse.com/tgz/lts/clickhouse-common-static-23.3.8.21-amd64.tgz
+wget https://packages.clickhouse.com/tgz/lts/clickhouse-client-23.3.8.21-amd64.tgz
+----
+
+* ClickHouse 23.3.8.21 on ARM:
++
+[source,bash]
+----
+wget https://packages.clickhouse.com/tgz/lts/clickhouse-server-23.3.8.21-arm64.tgz
+wget https://packages.clickhouse.com/tgz/lts/clickhouse-common-static-23.3.8.21-arm64.tgz
+wget https://packages.clickhouse.com/tgz/lts/clickhouse-client-23.3.8.21-arm64.tgz
+----
+
+. Create a S3 bucket in your AWS China account and upload the tgz archives to the bucket.
+* Make sure the bucket is in the same region as the AWS account in which you are deploying this ClickHouse solution.
+* Please upload the tgz archives directly to the bucket. Do not put them in a folder.
+* The bucket containing ARM versions must only contain ARM versions.
+* The bucket containing X86 versions must only contain X86 versions.
+
+. Note down your S3 bucket URI, e.g., `s3://{YOUR_BUCKET}`. Update the `ClickHousePkgS3URI` parameter with your bucket URI when configuring stack details.
