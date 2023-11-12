@@ -472,7 +472,7 @@ Resources:
               - s3:GetIntelligentTieringConfiguration
               - s3:PutIntelligentTieringConfiguration
               - s3:PutLifecycleConfiguration
-            Resource: !Sub arn:${InstanceRoleArn}:s3:::*
+            Resource: !Sub arn:${InstanceRoleArn}:s3:::*/*
           - Effect: Allow
             Action:
               - ec2:CreateTags
@@ -781,7 +781,7 @@ Resources:
               fi
             }
             chmod +x clickhouse-client-install.sh
-            ./clickhouse-client-install.sh ${ClickHouseVersion} `python ./find-secret.py secretfile ` ${RootStackName} ${AWS::Region} ${DemoDataSize} ${ClickHouseNodeCount} ${GrafanaVersion} > clickhouse-client-install.log
+            ./clickhouse-client-install.sh ${ClickHouseVersion} `python ./find-secret.py secretfile ` ${RootStackName} ${AWS::Region} ${DemoDataSize} ${ClickHouseNodeCount} ${GrafanaVersion} ${ClickHousePkgS3URI} > clickhouse-client-install.log
              
             cfn_check_result
             /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AdminAutoScalingGroup --region ${AWS::Region}
