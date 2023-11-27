@@ -485,7 +485,7 @@ Resources:
             - s3:GetIntelligentTieringConfiguration
             - s3:PutIntelligentTieringConfiguration
             - s3:PutLifecycleConfiguration
-            Resource: !Sub arn:${InstanceRoleArn}:s3:::*
+            Resource: !Sub arn:${InstanceRoleArn}:s3:::*/*
           - Effect: Allow
             Action:
             - ec2:CreateTags
