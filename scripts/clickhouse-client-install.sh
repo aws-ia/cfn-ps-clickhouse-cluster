@@ -8,6 +8,7 @@
 # ${DemoDataSize}   5
 # ${ClickHouseNodeCount} 6
 # ${GrafanaVersion} 7
+# ${ClickHousePkgS3URI} 8
 
 
 # Install the basics
@@ -25,15 +26,24 @@ sleep 1
 
 yum install yum-utils
 
-sudo yum-config-manager --add-repo https://packages.clickhouse.com/rpm/clickhouse.repo
-sudo yum install clickhouse-client-$1 -y
+if [ $1 = 23.3.8.21 ] && [ "${8}" != "none" ]; then
+  sudo aws s3 cp ${8}/clickhouse-common-static-23.3.8.21-amd64.tgz ./ --region $4
+  sudo aws s3 cp ${8}/clickhouse-client-23.3.8.21-amd64.tgz ./ --region $4
+  find clickhouse*.tgz -exec tar -xzvf {} \;
 
-sleep 1
-if [ ! -d "/etc/clickhouse-client" ]; then
-    echo "Try to download from https://mirrors.tuna.tsinghua.edu.cn/clickhouse/"
-    rpm --import https://mirrors.tuna.tsinghua.edu.cn/clickhouse/CLICKHOUSE-KEY.GPG
-    yum-config-manager --add-repo https://mirrors.tuna.tsinghua.edu.cn/clickhouse/rpm/stable/x86_64
-    yum install clickhouse-client-$1 -y
+  sudo clickhouse-common-static-$1/install/doinst.sh
+  sudo clickhouse-client-$1/install/doinst.sh
+else
+  sudo yum-config-manager --add-repo https://packages.clickhouse.com/rpm/clickhouse.repo
+  sudo yum install clickhouse-client-$1 -y
+
+  sleep 1
+  if [ ! -d "/etc/clickhouse-client" ]; then
+      echo "Try to download from https://mirrors.tuna.tsinghua.edu.cn/clickhouse/"
+      rpm --import https://mirrors.aliyun.com/clickhouse/CLICKHOUSE-KEY.GPG
+      yum-config-manager --add-repo https://mirrors.aliyun.com/clickhouse/rpm/stable/
+      yum install clickhouse-client-$1 -y
+  fi
 fi
 
 cd /home/ec2-user/

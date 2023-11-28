@@ -41,7 +41,9 @@ ln -s /home/clickhouse/data/log/ /var/log/clickhouse-server
 yum install yum-utils
 
 if [ $1 = 23.3.8.21 ] && [ "${20}" != "none" ]; then
-  sudo aws s3 sync ${20} ./ --region $4
+  sudo aws s3 cp ${20}/clickhouse-common-static-23.3.8.21-amd64.tgz ./ --region $4
+  sudo aws s3 cp ${20}/clickhouse-server-23.3.8.21-amd64.tgz ./ --region $4
+  sudo aws s3 cp ${20}/clickhouse-client-23.3.8.21-amd64.tgz ./ --region $4
   find clickhouse*.tgz -exec tar -xzvf {} \;
 
   sudo clickhouse-common-static-$1/install/doinst.sh
