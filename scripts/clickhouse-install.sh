@@ -40,10 +40,10 @@ ln -s /home/clickhouse/data/log/ /var/log/clickhouse-server
 
 yum install yum-utils
 
-if [ $1 = 23.3.8.21 ] && [ "${20}" != "none" ]; then
-  sudo aws s3 cp ${20}/clickhouse-common-static-23.3.8.21-amd64.tgz ./ --region $4
-  sudo aws s3 cp ${20}/clickhouse-server-23.3.8.21-amd64.tgz ./ --region $4
-  sudo aws s3 cp ${20}/clickhouse-client-23.3.8.21-amd64.tgz ./ --region $4
+if [ $1 = 24.3.3.102 ] && [ "${20}" != "none" ]; then
+  sudo aws s3 cp ${20}/clickhouse-common-static-24.3.3.102-amd64.tgz ./ --region $4
+  sudo aws s3 cp ${20}/clickhouse-server-24.3.3.102-amd64.tgz ./ --region $4
+  sudo aws s3 cp ${20}/clickhouse-client-24.3.3.102-amd64.tgz ./ --region $4
   find clickhouse*.tgz -exec tar -xzvf {} \;
 
   sudo clickhouse-common-static-$1/install/doinst.sh
@@ -311,15 +311,13 @@ then
     done
 fi
 
-# if [ $1 = 21.4.5.46-2 ]; then
-if [ $1 = 21.4.7.3-2 ]; then
+if [ $1 = 22.8.21.38 ]; then
     echo "Update the config.xml of $1"
     sed -i '508, 617d' /etc/clickhouse-server/config.xml
-# elif [ $1 = 21.5.5.12-2 ]; then
-elif [ $1 = 21.5.9.4-2 ]; then
+elif [ $1 = 23.8.14.6 ]; then
     echo "Update the config.xml of $1"
     sed -i '520, 630d' /etc/clickhouse-server/config.xml
-elif [ $1 = 23.3.8.21 ]; then
+elif [ $1 = 24.3.3.102 ]; then
     echo "Update the config.xml of $1"
     sed -i '783, 970d' /etc/clickhouse-server/config.xml
 fi

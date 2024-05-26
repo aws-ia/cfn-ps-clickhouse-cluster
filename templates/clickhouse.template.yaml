@@ -235,14 +235,14 @@ Parameters:
       - i3.16xlarge
   ClickHouseVersion:
     AllowedValues:
-    # - '21.4.5.46-2'
-    # - '21.5.5.12-2'
-    # Default: '21.4.5.46-2'
-    - '21.4.7.3-2'
-    - '21.5.9.4-2'
-    - '23.3.8.21'
-    Default: '23.3.8.21'
-    Description: ClickHouse version (21.4.7, 21.5.9 or 23.3.8.21).
+    # - '21.4.7.3-2'
+    # - '21.5.9.4-2'
+    # Default: '23.3.8.21'
+    - '22.8.21.38'
+    - '23.8.14.6'
+    - '24.3.3.102'
+    Default: '24.3.3.102'
+    Description: ClickHouse version (22.8.21, 23.8.14 or 24.3.3).
     Type: String
   ClickHouseTimezone:
     Default: Asia/Shanghai
@@ -344,7 +344,7 @@ Parameters:
     Description: The max_data_part_size_bytes for ClickHouse default storage.xml //  Unit is byte, the maximum size of a part that can be stored on any of the volume’s disks.
     Type: String
   GrafanaVersion:
-    Default: 8.0.1-1
+    Default: 8.0.7-1
     Description: Grafana version.
     Type: String
   DemoDataSize:

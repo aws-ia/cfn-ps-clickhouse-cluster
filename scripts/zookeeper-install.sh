@@ -10,10 +10,10 @@ sudo ln -s /home/ec2-user/jdk1.8.0_202/bin/java /usr/bin/java
 if [ ! -d "/home/ec2-user/jdk1.8.0_202" ]; then
   rm -rf /usr/local/bin/java
   rm -rf /usr/bin/java
-  wget -P ./ -T 60 https://download.java.net/openjdk/jdk8u41/ri/openjdk-8u41-b04-linux-x64-14_jan_2020.tar.gz
-  tar -xvf /home/ec2-user/openjdk-8u41-b04-linux-x64-14_jan_2020.tar.gz
-  sudo ln -s /home/ec2-user/java-se-8u41-ri/bin/java /usr/local/bin/java
-  sudo ln -s /home/ec2-user/java-se-8u41-ri/bin/java /usr/bin/java
+  wget -P ./ -T 60 https://mirrors.tuna.tsinghua.edu.cn/Adoptium/8/jdk/x64/linux/OpenJDK8U-jdk_x64_linux_hotspot_8u412b08.tar.gz
+  tar -xvf /home/ec2-user/OpenJDK8U-jdk_x64_linux_hotspot_8u412b08.tar.gz
+  sudo ln -s /home/ec2-user/jdk8u412-b08/bin/java /usr/local/bin/java
+  sudo ln -s /home/ec2-user/jdk8u412-b08/bin/java /usr/bin/java
 fi
 
 # Avoid deployment issues caused by the version of Zookeeper's frequent changes.
