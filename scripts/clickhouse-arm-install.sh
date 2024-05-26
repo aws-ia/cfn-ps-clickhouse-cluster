@@ -47,11 +47,11 @@ chown -R clickhouse.clickhouse /var/lib/clickhouse/
 cd /var/lib/clickhouse/
 wget https://apt.llvm.org/llvm.sh
 chmod +x llvm.sh
-./llvm.sh 11
-export CC=clang-11
-export CXX=clang++-11
+./llvm.sh 18
+export CC=clang-18
+export CXX=clang++-18
 
-if [ $1 = 23.3.8.21 ] && [ "${20}" != "none" ]; then
+if [ $1 = 24.3.3.102 ] && [ "${20}" != "none" ]; then
   sudo aws s3 sync ${20} ./ --region $4
   find clickhouse*.tgz -exec tar -xzvf {} \;
 
@@ -318,7 +318,7 @@ then
     done
 fi
 
-if [ $1 = 23.3.8.21 ]; then
+if [ $1 = 24.3.3.102 ]; then
     echo "Update the config.xml of $1"
     sed -i '783, 970d' /etc/clickhouse-server/config.xml
 fi

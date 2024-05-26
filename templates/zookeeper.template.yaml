@@ -139,10 +139,11 @@ Parameters:
       - i3.16xlarge
   ZookeeperVersion:
     AllowedValues:
-    - '3.7.1'
-    - '3.8.2'
-    Default: '3.8.2'
-    Description: ZooKeeper version (3.8.2).
+    - '3.7.2'
+    - '3.8.4'
+    - '3.9.2'
+    Default: '3.9.2'
+    Description: Zookeeper version (3.9.2).
     Type: String
   ZookeeperNodeCount:
     Default: 3

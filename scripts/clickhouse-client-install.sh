@@ -14,7 +14,6 @@
 # Install the basics
 yum -y update -y
 yum -y install jq -y
-yum install python3.7 -y
 
 pip3 install awscli --upgrade --user
 echo "export PATH=~/.local/bin:$PATH" >> .bash_profile
@@ -26,9 +25,9 @@ sleep 1
 
 yum install yum-utils
 
-if [ $1 = 23.3.8.21 ] && [ "${8}" != "none" ]; then
-  sudo aws s3 cp ${8}/clickhouse-common-static-23.3.8.21-amd64.tgz ./ --region $4
-  sudo aws s3 cp ${8}/clickhouse-client-23.3.8.21-amd64.tgz ./ --region $4
+if [ $1 = 24.3.3.102 ] && [ "${8}" != "none" ]; then
+  sudo aws s3 cp ${8}/clickhouse-common-static-24.3.3.102-amd64.tgz ./ --region $4
+  sudo aws s3 cp ${8}/clickhouse-client-24.3.3.102-amd64.tgz ./ --region $4
   find clickhouse*.tgz -exec tar -xzvf {} \;
 
   sudo clickhouse-common-static-$1/install/doinst.sh

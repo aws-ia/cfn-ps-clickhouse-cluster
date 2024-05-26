@@ -209,8 +209,8 @@ Parameters:
       - r6g.16xlarge
   ClickHouseVersion:
     AllowedValues:
-      - '23.3.8.21'
-    Default: '23.3.8.21'
+      - '24.3.3.102'
+    Default: '24.3.3.102'
     Description: ClickHouse version.
     Type: String
   ClickHouseTimezone:
@@ -318,7 +318,7 @@ Parameters:
     Description: The max_data_part_size_bytes for ClickHouse default storage.xml //  Unit is byte, the maximum size of a part that can be stored on any of the volume’s disks.
     Type: String
   GrafanaVersion:
-    Default: 8.0.1-1
+    Default: 8.0.7-1
     Description: Grafana version.
     Type: String
   DemoDataSize:
@@ -833,7 +833,7 @@ Resources:
             export CC=clang-11
             export CXX=clang++-11
 
-            if [ ${ClickHouseVersion} = 23.3.8.21 ] && [ "${ClickHousePkgS3URI}" != "none" ]; then
+            if [ ${ClickHouseVersion} = 24.3.3.102 ] && [ "${ClickHousePkgS3URI}" != "none" ]; then
                 sudo aws s3 sync ${ClickHousePkgS3URI} ./ --region ${AWS::Region}
                 find clickhouse*.tgz -exec tar -xzvf {} \;
 

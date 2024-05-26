@@ -275,10 +275,11 @@ Parameters:
       - i3.16xlarge
   ZookeeperVersion:
     AllowedValues:
-    - '3.7.1'
-    - '3.8.2'
-    Default: '3.8.2'
-    Description: ZooKeeper version (3.8.2).
+    - '3.7.2'
+    - '3.8.4'
+    - '3.9.2'
+    Default: '3.9.2'
+    Description: Zookeeper version (3.9.2).
     Type: String
   ZookeeperNodeCount:
     Default: 3
@@ -359,14 +360,14 @@ Parameters:
       - i3.16xlarge
   ClickHouseVersion:
     AllowedValues:
-    # - '21.4.5.46-2'
-    # - '21.5.5.12-2'
-    # Default: '21.4.5.46-2'
-    - '21.4.7.3-2'
-    - '21.5.9.4-2'
-    - '23.3.8.21'
-    Default: '23.3.8.21'
-    Description: ClickHouse version (21.4.7, 21.5.9 or 23.3.8.21).
+    # - '21.4.7.3-2'
+    # - '21.5.9.4-2'
+    # Default: '23.3.8.21'
+    - '22.8.21.38'
+    - '23.8.14.6'
+    - '24.3.3.102'
+    Default: '24.3.3.102'
+    Description: ClickHouse version (22.8.21, 23.8.14 or 24.3.3).
     Type: String
   ClickHousePkgS3URI:
     Description:  ClickHouse X86 tgz package storage, e.g., s3://{YOUR_BUCKET}
@@ -481,7 +482,7 @@ Parameters:
     Description: If you use the cold option, you can move data to Amazon S3 if the local disk size is smaller than move_factor multiplied by disk_size.
     Type: String
   GrafanaVersion:
-    Default: 8.0.1-1
+    Default: 8.0.7-1
     Description: Grafana version.
     Type: String
   Port:

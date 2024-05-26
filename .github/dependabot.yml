@@ -1,0 +1,14 @@
+version: 2
+updates:
+- package-ecosystem: docker
+  directory: "/.project_automation/functional_tests"
+  schedule:
+    interval: weekly
+- package-ecosystem: docker
+  directory: "/.project_automation/publication"
+  schedule:
+    interval: weekly
+- package-ecosystem: docker
+  directory: "/.project_automation/static_tests"
+  schedule:
+    interval: weekly
